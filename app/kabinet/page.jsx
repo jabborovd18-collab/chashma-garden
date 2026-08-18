@@ -47,6 +47,8 @@ import {
 import { changeOwnPassword } from '@/lib/worker-auth'
 import { authErrorMessage, errorMessage } from '@/lib/auth-errors'
 import { Icon, resolveIconName } from '@/components/icons'
+import { QrCode } from '@/components/qr'
+import { workerQrValue } from '@/lib/qr'
 import {
   FullScreenLoading,
   SectionLoading,
@@ -283,6 +285,21 @@ export default function KabinetPage() {
         className="animate-fadeIn"
       >
         {error && <ErrorBanner message={error} onRetry={load} />}
+
+        {/* ─── QR kod ─── */}
+        <div style={cardStyle({ padding: 18, marginBottom: 16, textAlign: 'center' })}>
+          <Caption icon="qr">Ishga kelganda shu kodni ko‘rsating</Caption>
+
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '6px 0 12px' }}>
+            <QrCode value={workerQrValue(workerId)} size={190} />
+          </div>
+
+          <div style={{ fontSize: 12, color: COLORS.textMuted, lineHeight: 1.6 }}>
+            Hostes yoki administrator uni skanerlaydi — davomatingiz
+            <br />
+            avtomatik yoziladi. Ekran yorug‘ligini oshirsangiz tezroq o‘qiladi.
+          </div>
+        </div>
 
         {/* ─── Oy tanlash ─── */}
         <div

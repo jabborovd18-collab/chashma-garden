@@ -44,6 +44,16 @@ Yangi ikona kerak bo'lsa — `icons.jsx` ichidagi `P` obyektiga qo'shing.
 Tashqi ikona kutubxonasi (`lucide-react`, `react-icons`, ...) **o'rnatilmaydi**:
 bizga 60 ta ikona kerak, buning uchun bog'liqlik qo'shish ortiqcha.
 
+Bu qoida **ikona va UI kutubxonalariga** tegishli. Vazifaviy
+kutubxona (masalan QR kodni kodlash) bunga kirmaydi — QR ni noldan
+yozish Rid-Solomon xatolik tuzatish algoritmini talab qiladi.
+Hozircha ikkita istisno bor:
+
+| Kutubxona | Nima uchun |
+|---|---|
+| `qrcode` | Xodim QR kodini yaratish (SVG) |
+| `jsqr` | QR o'qish — iPhone Safari'da brauzerning `BarcodeDetector` i yo'q |
+
 Ikona uslubi: `24×24` to'r, `fill="none"`, faqat chiziq, rang har doim
 `currentColor`, chiziq qalinligi `1.6`. Yangi ikona shu uslubga mos
 bo'lishi shart — to'ldirilgan (solid) yoki ko'p rangli ikona qo'shilmaydi.
@@ -182,7 +192,24 @@ kerak. Hisobotni "jonli" hisoblaydigan qilib qayta yozmang.
 Hujjat id: `${sana}_${xodimId}` — bir kunga bir xodim uchun ikkita
 yozuv paydo bo'lishi mumkin emas.
 
-### 2.5 Login tizimi — email emas, username
+### 2.5 QR davomat
+
+QR ichida `CG1:<xodimId>` turadi — `lib/qr.js`. Belgi (`CG1:`) begona
+QR larni rad etish uchun kerak, raqam esa kelajakdagi versiya uchun.
+
+QR da maxfiy narsa yo'q: hujjat id sini bilgan odam ham bazadan hech
+nima o'qiy olmaydi, chunki barcha so'rovlar `firestore.rules` orqali
+o'tadi. Ishonch skanerni ushlab turgan odamga (hostes) qo'yilgan —
+shuning uchun skanerdan keyin ism ko'rsatilib, tasdiqlash so'raladi.
+
+Skaner ikki usulni ishlatadi: `BarcodeDetector` (Android Chrome, tez)
+va `jsQR` (zaxira, iPhone uchun). **Kamera faqat `https` da ochiladi.**
+
+Suzuvchi element bo'lgani uchun skaner ham portal orqali chiqadi
+(1.5-band). Kamera ochilgach `stream` ni albatta to'xtating — aks holda
+modal yopilgandan keyin ham kamera yonib turadi.
+
+### 2.6 Login tizimi — email emas, username
 
 Foydalanuvchi **login** kiritadi (`aziz.karimov`), email emas.
 O'zbekistonda pochta keng tarqalmagan, xodimlarning ko'pida yo'q.
@@ -211,7 +238,7 @@ Boshqa foydalanuvchining parolini brauzerdan o'zgartirib bo'lmaydi —
 buning uchun server tomonida Admin SDK kerak (Telegram bosqichida
 qo'shiladi). Xodim o'z parolini kabinetdan o'zgartira oladi.
 
-### 2.6 Xavfsizlik
+### 2.7 Xavfsizlik
 
 Besh rol, `users/{uid}` hujjatida:
 

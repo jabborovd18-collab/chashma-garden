@@ -36,6 +36,8 @@ import {
   removeAttendance,
 } from '@/lib/db'
 import { Icon, resolveIconName } from '@/components/icons'
+import { QrScanner } from '@/components/qr-scanner'
+import { parseQrValue } from '@/lib/qr'
 import {
   SectionHeader,
   SectionLoading,
@@ -71,6 +73,8 @@ export default function DavomatPage() {
   const [search, setSearch] = useState('')
   const [savingId, setSavingId] = useState(null)
   const [editing, setEditing] = useState(null)
+  const [scanning, setScanning] = useState(false)
+  const [scannedId, setScannedId] = useState(null)
 
   const isToday = selectedDate === dateKey()
 
@@ -197,6 +201,41 @@ export default function DavomatPage() {
     }
   }
 
+  /* ─── QR skaner ─────────────────────────────────────────────── */
+
+  /**
+   * Skanerlangan matnni xodimga aylantiradi.
+   * Skaner o'zi davomat yozmaydi — topilgan xodimni tasdiqlash
+   * oynasiga uzatadi, hostes kimni belgilayotganini ko'rib turadi.
+   */
+  function handleScan(text) {
+    const id = parseQrValue(text)
+
+    if (!id) {
+      showToast('Bu Chashma Garden kodi emas', 'error')
+      setScanning(false)
+      return
+    }
+
+    const worker = workers.find((w) => w.id === id)
+
+    if (!worker) {
+      // Kod to'g'ri, lekin xodim ro'yxatda yo'q: o'chirilgan yoki
+      // "nofaol" qilib qo'yilgan bo'lishi mumkin
+      showToast('Xodim topilmadi — nofaol yoki o‘chirilgan bo‘lishi mumkin', 'error')
+      setScanning(false)
+      return
+    }
+
+    setScanning(false)
+    setScannedId(worker.id)
+    setEditing(worker)
+
+    if (records[worker.id]) {
+      showToast(`${worker.name} bugun allaqachon belgilangan`, 'info')
+    }
+  }
+
   /* ─── Filtr va guruhlash ────────────────────────────────────── */
 
   const filtered = useMemo(() => {
@@ -253,6 +292,19 @@ export default function DavomatPage() {
         subtitle={`${formatDate(selectedDate)}, ${weekdayName(selectedDate)}${isToday ? ' — bugun' : ''}`}
         action={
           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            {/* Skaner faqat bugungi kun uchun: o'tgan kunni QR bilan
+                belgilash mantiqsiz, vaqti ham hozirgi bo'lib ketardi */}
+            {isToday && (
+              <button
+                onClick={() => setScanning(true)}
+                className="btn-primary"
+                style={primaryButtonStyle({ marginRight: 4 })}
+              >
+                <Icon name="scan" size={15} />
+                Skaner
+              </button>
+            )}
+
             <button
               onClick={() => setSelectedDate((d) => shiftDate(d, -1))}
               aria-label="Oldingi kun"
@@ -381,20 +433,34 @@ export default function DavomatPage() {
         })
       )}
 
+      {scanning && (
+        <QrScanner
+          onScan={handleScan}
+          onClose={() => setScanning(false)}
+          onManual={() => setScanning(false)}
+        />
+      )}
+
       {editing && (
         <EditModal
           worker={editing}
           record={records[editing.id]}
           shiftStart={shiftStartFor(editing)}
           settings={settings}
-          onClose={() => setEditing(null)}
+          scanned={scannedId === editing.id}
+          onClose={() => {
+            setEditing(null)
+            setScannedId(null)
+          }}
           onSave={async (opts) => {
             await mark(editing, opts)
             setEditing(null)
+            setScannedId(null)
           }}
           onClear={async () => {
             await clearMark(editing)
             setEditing(null)
+            setScannedId(null)
           }}
         />
       )}
@@ -508,7 +574,7 @@ function WorkerRow({ worker, record, shiftStart, busy, isLast, onMark, onOpen })
    TAHRIRLASH OYNASI
    ════════════════════════════════════════════════════════════════ */
 
-function EditModal({ worker, record, shiftStart, settings, onClose, onSave, onClear }) {
+function EditModal({ worker, record, shiftStart, settings, scanned, onClose, onSave, onClear }) {
   const [time, setTime] = useState(record?.checkIn || timeNow())
   const [busy, setBusy] = useState(false)
 
@@ -538,7 +604,44 @@ function EditModal({ worker, record, shiftStart, settings, onClose, onSave, onCl
   }
 
   return (
-    <Modal title={worker.name} onClose={onClose} width={430}>
+    <Modal title={scanned ? 'QR o‘qildi' : worker.name} onClose={onClose} width={430}>
+      {/* Skanerdan kelgan bo'lsa ismni yirik ko'rsatamiz: hostes
+          kimni belgilayotganini bir qarashda ko'rishi kerak */}
+      {scanned && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 13,
+            padding: 14,
+            marginBottom: 16,
+            border: `1px solid ${COLORS.primary}33`,
+            background: COLORS.primarySoft,
+            borderRadius: UI.radius.control,
+          }}
+        >
+          <Avatar name={worker.name} size={46} color={COLORS.primary} />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: '-0.01em' }}>
+              {worker.name}
+            </div>
+            <div
+              style={{
+                fontSize: 12.5,
+                color: COLORS.primary,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                marginTop: 2,
+              }}
+            >
+              <Icon name="checkCircle" size={13} />
+              Shu xodimmi? Tasdiqlang
+            </div>
+          </div>
+        </div>
+      )}
+
       <div
         style={{
           display: 'flex',

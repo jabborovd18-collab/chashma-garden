@@ -154,6 +154,24 @@ const P = {
     </>
   ),
 
+  scan: (
+    <>
+      <path d="M3 8V5.5A2.5 2.5 0 0 1 5.5 3H8" />
+      <path d="M16 3h2.5A2.5 2.5 0 0 1 21 5.5V8" />
+      <path d="M21 16v2.5a2.5 2.5 0 0 1-2.5 2.5H16" />
+      <path d="M8 21H5.5A2.5 2.5 0 0 1 3 18.5V16" />
+      <path d="M3 12h18" />
+    </>
+  ),
+  qr: (
+    <>
+      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+      <path d="M14 14h3v3h-3z" />
+      <path d="M20.5 14v.01M14 20.5v.01M17.5 20.5v.01M20.5 17.5v.01M20.5 20.5v.01" />
+    </>
+  ),
   note: (
     <>
       <rect x="4" y="3" width="16" height="18" rx="2" />

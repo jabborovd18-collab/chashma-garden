@@ -17,6 +17,7 @@ avtomatik hisoblash va oylik maoshni chiqarish uchun ichki panel.
 | 💰 **Oylik** | Har bir xodim bo'yicha: ishlagan kunlar − jarimalar − avanslar = to'lanadigan summa |
 | 💵 **Kassa** | Kassir uchun: kimga qancha berilishi, berilgani, qolgani. Xodim zimmasiga summa yozish |
 | ⚙️ **Sozlamalar** | Jarima qoidalari, panel foydalanuvchilari, Telegram sozlamalari |
+| 📱 **QR davomat** | Xodim QR kodini ko'rsatadi, hostes skanerlaydi — davomat avtomatik yoziladi |
 | 👤 **Xodim kabineti** | Xodim o'z login-paroli bilan kiradi: oylik yakuni, oxirgi 14 kunlik davomat, eslatmalar |
 
 ### Hisoblash formulasi
@@ -206,6 +207,9 @@ firestore.rules           ⭐ Xavfsizlik qoidalari
 | `advances` | Avanslar (oylikdan ushlab qolinadi) |
 | `charges` | Xodim zimmasiga yozilgan summa: singan idish, kam chiqqan kassa |
 | `payouts` | Kassir bergan to'lovlar |
+
+> QR kod uchun alohida kolleksiya yo‘q — kod ichida xodimning mavjud
+> hujjat id si turadi (`CG1:<id>`), shuning uchun hech narsa saqlanmaydi.
 | `notes` | Xodimga yozilgan sanali eslatmalar — kabinetda ko'rinadi |
 | `complaints` | Mijoz shikoyatlari (xodim ko'rmaydi) |
 | `settings/app` | Jarima qoidalari, Telegram sozlamalari |

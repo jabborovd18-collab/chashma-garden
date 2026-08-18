@@ -12,6 +12,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import Link from 'next/link'
 import { useAuth } from '@/components/auth-context'
 import { COLORS, UI } from '@/lib/constants'
 import { formatSom, parseSom, dateKey, formatDate } from '@/lib/utils'
@@ -160,6 +161,10 @@ export default function IshchilarPage() {
         action={
           canManage && (
             <div style={{ display: 'flex', gap: 8 }}>
+              <Link href="/qr" className="btn-secondary" style={secondaryButtonStyle({ textDecoration: 'none' })}>
+                <Icon name="qr" size={15} />
+                QR kartalar
+              </Link>
               <button
                 onClick={() => setShowPositions(true)}
                 className="btn-secondary"
