@@ -45,7 +45,7 @@ import {
   loadPositions,
 } from '@/lib/db'
 import { changeOwnPassword } from '@/lib/worker-auth'
-import { authErrorMessage } from '@/lib/auth-errors'
+import { authErrorMessage, errorMessage } from '@/lib/auth-errors'
 import { Icon, resolveIconName } from '@/components/icons'
 import {
   FullScreenLoading,
@@ -119,7 +119,7 @@ export default function KabinetPage() {
       setPayouts(pay)
       setNotes(nts)
     } catch (err) {
-      setError(err.message || 'Ma’lumotlarni yuklab bo‘lmadi')
+      setError(errorMessage(err, 'Ma’lumotlarni yuklab bo‘lmadi'))
     } finally {
       setLoading(false)
     }

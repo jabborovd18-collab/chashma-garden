@@ -19,7 +19,7 @@ import { COLORS, ROLE_LIST, ROLES, DEFAULT_SETTINGS, UI } from '@/lib/constants'
 import { formatSom, parseSom, formatDuration } from '@/lib/utils'
 import { loginToEmail, normalizeLogin, validateLogin, suggestLogin } from '@/lib/username'
 import { penaltyFor, withDefaults } from '@/lib/payroll'
-import { authErrorMessage } from '@/lib/auth-errors'
+import { authErrorMessage, errorMessage } from '@/lib/auth-errors'
 import {
   loadSettings,
   saveSettings,
@@ -69,7 +69,7 @@ export default function SozlamalarPage() {
       setSettings(withDefaults(s))
       setUsers(u)
     } catch (err) {
-      setError(err.message || 'Sozlamalarni yuklab bo‘lmadi')
+      setError(errorMessage(err, 'Sozlamalarni yuklab bo‘lmadi'))
     } finally {
       setLoading(false)
     }
@@ -158,7 +158,7 @@ function PenaltySettings({ settings, onSaved, showToast }) {
       await onSaved()
       showToast('Jarima qoidalari saqlandi')
     } catch (err) {
-      showToast(err.message || 'Saqlab bo‘lmadi', 'error')
+      showToast(errorMessage(err, 'Saqlab bo‘lmadi'), 'error')
     } finally {
       setBusy(false)
     }
@@ -406,7 +406,7 @@ function UsersSettings({ users, currentUid, onChanged, onSelfChanged, showToast 
       if (u.id === currentUid) await onSelfChanged()
       showToast(u.active ? 'Kirish to‘xtatildi' : 'Kirish tiklandi')
     } catch (err) {
-      showToast(err.message || 'O‘zgartirib bo‘lmadi', 'error')
+      showToast(errorMessage(err, 'O‘zgartirib bo‘lmadi'), 'error')
     } finally {
       setBusyId(null)
     }
@@ -419,7 +419,7 @@ function UsersSettings({ users, currentUid, onChanged, onSelfChanged, showToast 
       showToast('Foydalanuvchi o‘chirildi')
       setConfirmDel(null)
     } catch (err) {
-      showToast(err.message || 'O‘chirib bo‘lmadi', 'error')
+      showToast(errorMessage(err, 'O‘chirib bo‘lmadi'), 'error')
     }
   }
 
@@ -681,7 +681,7 @@ function TelegramSettings({ settings, onSaved, showToast }) {
       await onSaved()
       showToast('Telegram sozlamalari saqlandi')
     } catch (err) {
-      showToast(err.message || 'Saqlab bo‘lmadi', 'error')
+      showToast(errorMessage(err, 'Saqlab bo‘lmadi'), 'error')
     } finally {
       setBusy(false)
     }

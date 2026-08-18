@@ -54,6 +54,7 @@ import {
   secondaryButtonStyle,
   cardStyle,
 } from '@/components/ui'
+import { errorMessage } from '@/lib/auth-errors'
 
 export default function DavomatPage() {
   const { profile } = useAuth()
@@ -96,7 +97,7 @@ export default function DavomatPage() {
         await loadBase()
         if (alive) await loadDay(selectedDate)
       } catch (err) {
-        if (alive) setError(err.message || 'Ma’lumotlarni yuklab bo‘lmadi')
+        if (alive) setError(errorMessage(err, 'Ma’lumotlarni yuklab bo‘lmadi'))
       } finally {
         if (alive) setLoading(false)
       }
@@ -114,7 +115,7 @@ export default function DavomatPage() {
       try {
         if (alive) await loadDay(selectedDate)
       } catch (err) {
-        if (alive) setError(err.message || 'Kun ma’lumotini o‘qib bo‘lmadi')
+        if (alive) setError(errorMessage(err, 'Kun ma’lumotini o‘qib bo‘lmadi'))
       }
     })()
     return () => {
@@ -173,7 +174,7 @@ export default function DavomatPage() {
         calc.penalty > 0 ? 'info' : 'success'
       )
     } catch (err) {
-      showToast(err.message || 'Saqlab bo‘lmadi', 'error')
+      showToast(errorMessage(err, 'Saqlab bo‘lmadi'), 'error')
     } finally {
       setSavingId(null)
     }
@@ -190,7 +191,7 @@ export default function DavomatPage() {
       })
       showToast(`${worker.name} — belgi olib tashlandi`, 'info')
     } catch (err) {
-      showToast(err.message || 'O‘chirib bo‘lmadi', 'error')
+      showToast(errorMessage(err, 'O‘chirib bo‘lmadi'), 'error')
     } finally {
       setSavingId(null)
     }

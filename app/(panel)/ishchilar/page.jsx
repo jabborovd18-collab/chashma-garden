@@ -17,7 +17,7 @@ import { COLORS, UI } from '@/lib/constants'
 import { formatSom, parseSom, dateKey, formatDate } from '@/lib/utils'
 import { normalizeLogin, validateLogin, suggestLogin } from '@/lib/username'
 import { createWorkerLogin, setWorkerLoginActive } from '@/lib/worker-auth'
-import { authErrorMessage } from '@/lib/auth-errors'
+import { authErrorMessage, errorMessage } from '@/lib/auth-errors'
 import {
   loadWorkers,
   createWorker,
@@ -98,7 +98,7 @@ export default function IshchilarPage() {
       const users = await loadWorkerUsers()
       setLogins(Object.fromEntries(users.map((u) => [u.id, u])))
     } catch (err) {
-      setError(err.message || 'Ma’lumotlarni yuklab bo‘lmadi')
+      setError(errorMessage(err, 'Ma’lumotlarni yuklab bo‘lmadi'))
     } finally {
       setLoading(false)
     }
@@ -141,7 +141,7 @@ export default function IshchilarPage() {
       showToast(`${confirmDel.name} o‘chirildi`)
       setConfirmDel(null)
     } catch (err) {
-      showToast(err.message || 'O‘chirib bo‘lmadi', 'error')
+      showToast(errorMessage(err, 'O‘chirib bo‘lmadi'), 'error')
     } finally {
       setDeleting(false)
     }
@@ -759,7 +759,7 @@ function NotesModal({ worker, authorName, authorUid, canDelete, onClose, showToa
     try {
       setNotes(await loadNotes(worker.id))
     } catch (err) {
-      showToast(err.message || 'Eslatmalarni yuklab bo‘lmadi', 'error')
+      showToast(errorMessage(err, 'Eslatmalarni yuklab bo‘lmadi'), 'error')
     } finally {
       setLoading(false)
     }
@@ -784,7 +784,7 @@ function NotesModal({ worker, authorName, authorUid, canDelete, onClose, showToa
       await refresh()
       showToast('Eslatma qo‘shildi')
     } catch (err) {
-      showToast(err.message || 'Saqlab bo‘lmadi', 'error')
+      showToast(errorMessage(err, 'Saqlab bo‘lmadi'), 'error')
     } finally {
       setBusy(false)
     }
@@ -797,7 +797,7 @@ function NotesModal({ worker, authorName, authorUid, canDelete, onClose, showToa
       await refresh()
       showToast('Eslatma o‘chirildi')
     } catch (err) {
-      showToast(err.message || 'O‘chirib bo‘lmadi', 'error')
+      showToast(errorMessage(err, 'O‘chirib bo‘lmadi'), 'error')
     } finally {
       setBusy(false)
     }
@@ -903,7 +903,7 @@ function PositionsModal({ positions, workers, onClose, onChanged, showToast }) {
       await onChanged()
       showToast(form.id ? 'Lavozim yangilandi' : 'Lavozim qo‘shildi')
     } catch (err) {
-      showToast(err.message || 'Saqlab bo‘lmadi', 'error')
+      showToast(errorMessage(err, 'Saqlab bo‘lmadi'), 'error')
     } finally {
       setBusy(false)
     }
@@ -929,7 +929,7 @@ function PositionsModal({ positions, workers, onClose, onChanged, showToast }) {
       ])
       await onChanged()
     } catch (err) {
-      showToast(err.message || 'Tartibni o‘zgartirib bo‘lmadi', 'error')
+      showToast(errorMessage(err, 'Tartibni o‘zgartirib bo‘lmadi'), 'error')
     } finally {
       setBusy(false)
     }
@@ -946,7 +946,7 @@ function PositionsModal({ positions, workers, onClose, onChanged, showToast }) {
       await onChanged()
       showToast('Lavozim o‘chirildi')
     } catch (err) {
-      showToast(err.message || 'O‘chirib bo‘lmadi', 'error')
+      showToast(errorMessage(err, 'O‘chirib bo‘lmadi'), 'error')
     } finally {
       setBusy(false)
     }

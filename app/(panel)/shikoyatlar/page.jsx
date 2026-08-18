@@ -49,6 +49,7 @@ import {
   secondaryButtonStyle,
   cardStyle,
 } from '@/components/ui'
+import { errorMessage } from '@/lib/auth-errors'
 
 export default function ShikoyatlarPage() {
   const { profile, role, isDirector } = useAuth()
@@ -72,7 +73,7 @@ export default function ShikoyatlarPage() {
       setItems(c)
       setWorkers(w.filter((x) => x.active !== false))
     } catch (err) {
-      setError(err.message || 'Shikoyatlarni yuklab bo‘lmadi')
+      setError(errorMessage(err, 'Shikoyatlarni yuklab bo‘lmadi'))
     } finally {
       setLoading(false)
     }
@@ -104,7 +105,7 @@ export default function ShikoyatlarPage() {
       setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, status } : i)))
       showToast(`Holat: ${COMPLAINT_STATUS[status].label}`)
     } catch (err) {
-      showToast(err.message || 'O‘zgartirib bo‘lmadi', 'error')
+      showToast(errorMessage(err, 'O‘zgartirib bo‘lmadi'), 'error')
     } finally {
       setBusyId(null)
     }
@@ -117,7 +118,7 @@ export default function ShikoyatlarPage() {
       showToast('Shikoyat o‘chirildi')
       setConfirmDel(null)
     } catch (err) {
-      showToast(err.message || 'O‘chirib bo‘lmadi', 'error')
+      showToast(errorMessage(err, 'O‘chirib bo‘lmadi'), 'error')
     }
   }
 
@@ -356,7 +357,7 @@ function ComplaintModal({ workers, profile, role, onClose, onSaved }) {
       })
       await onSaved()
     } catch (err) {
-      setError(err.message || 'Saqlab bo‘lmadi')
+      setError(errorMessage(err, 'Saqlab bo‘lmadi'))
       setBusy(false)
     }
   }

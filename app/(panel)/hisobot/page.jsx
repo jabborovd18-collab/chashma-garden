@@ -58,6 +58,7 @@ import {
   secondaryButtonStyle,
   cardStyle,
 } from '@/components/ui'
+import { errorMessage } from '@/lib/auth-errors'
 
 export default function HisobotPage() {
   // Avansni o‘chirish to‘lanadigan summani oshiradi — bu amal
@@ -94,7 +95,7 @@ export default function HisobotPage() {
       setAdvances(a)
       setCharges(c)
     } catch (err) {
-      setError(err.message || 'Hisobotni yuklab bo‘lmadi')
+      setError(errorMessage(err, 'Hisobotni yuklab bo‘lmadi'))
     } finally {
       setLoading(false)
     }
@@ -621,7 +622,7 @@ function AdvanceModal({ row, onClose, onSave }) {
     try {
       await onSave(amount, note.trim())
     } catch (err) {
-      setError(err.message || 'Saqlab bo‘lmadi')
+      setError(errorMessage(err, 'Saqlab bo‘lmadi'))
       setBusy(false)
     }
   }

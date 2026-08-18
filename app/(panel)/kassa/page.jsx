@@ -65,6 +65,7 @@ import {
   secondaryButtonStyle,
   cardStyle,
 } from '@/components/ui'
+import { errorMessage } from '@/lib/auth-errors'
 
 export default function KassaPage() {
   const { profile, isDirector } = useAuth()
@@ -104,7 +105,7 @@ export default function KassaPage() {
       setCharges(c)
       setPayouts(pay)
     } catch (err) {
-      setError(err.message || 'Kassa ma’lumotlarini yuklab bo‘lmadi')
+      setError(errorMessage(err, 'Kassa ma’lumotlarini yuklab bo‘lmadi'))
     } finally {
       setLoading(false)
     }
@@ -476,7 +477,7 @@ function PayModal({ row, month, profile, onClose, onSaved }) {
       })
       await onSaved(`${row.worker.name} — ${formatSom(amount)} so‘m berildi`)
     } catch (err) {
-      setError(err.message || 'Saqlab bo‘lmadi')
+      setError(errorMessage(err, 'Saqlab bo‘lmadi'))
       setBusy(false)
     }
   }
@@ -579,7 +580,7 @@ function ChargeModal({ row, profile, onClose, onSaved }) {
       })
       await onSaved(`${row.worker.name} zimmasiga ${formatSom(amount)} so‘m yozildi`)
     } catch (err) {
-      setError(err.message || 'Saqlab bo‘lmadi')
+      setError(errorMessage(err, 'Saqlab bo‘lmadi'))
       setBusy(false)
     }
   }
