@@ -66,10 +66,30 @@ NEXT_PUBLIC_FIREBASE_APP_ID=...
 
 Firestore qoidalari **majburiy** — ularsiz maosh ma'lumotlari ochiq qoladi.
 
-Firebase Console → **Firestore Database → Rules** bo'limiga
-[`firestore.rules`](firestore.rules) faylining mazmunini ko'chiring va **Publish** bosing.
+Ikki yo'l bor.
 
-Xuddi shunday **Storage → Rules** uchun [`storage.rules`](storage.rules).
+**Firebase CLI orqali** (tavsiya) — bir marta sozlansa, keyin bitta buyruq:
+
+```bash
+npm install -g firebase-tools
+```
+
+```bash
+firebase login
+```
+
+```bash
+firebase deploy --only firestore:rules
+```
+
+**Yoki qo'lda:** Firebase Console → **Firestore Database → Rules** bo'limiga
+[`firestore.rules`](firestore.rules) mazmunini ko'chiring va **Publish** bosing.
+
+> Qoidalar har o'zgarganda qayta joylash kerak. Yangi kolleksiya qo'shilib
+> qoidasi joylanmasa, u avtomatik yopiq qoladi va sahifa «ruxsat yo'q» deydi.
+
+> `storage.rules` bu loyihada ishlatilmaydi — Firebase Storage yoqilmagan.
+> Fayl kelajak uchun, butunlay yopiq holatda saqlanib turibdi.
 
 ### 4. Ishga tushiring
 
@@ -90,9 +110,13 @@ Bu sahifa faqat **bir marta** ishlaydi: birinchi direktor yaratilgach
 o'zini yopadi va boshqa hech kim undan foydalana olmaydi. Keyingi
 foydalanuvchilarni **Sozlamalar → Foydalanuvchilar** bo'limidan qo'shasiz.
 
-Sozlash jarayonida 9 ta standart lavozim (afitsant, oshpaz, salatchi,
-kassir, administrator, hostes, farrosh, qorovul, oshpaz yordamchisi)
-bazaga avtomatik yoziladi — ularni keyin tahrirlashingiz mumkin.
+Sozlash jarayonida 5 ta standart lavozim (afitsant, raner, salatchi,
+oshpaz, zakadovkachi) bazaga avtomatik yoziladi. Ularni keyin
+**Xodimlar → Lavozimlar** bo'limida tahrirlaysiz: nomi, smena vaqti,
+standart stavka, ikonasi va ro'yxatdagi tartibi.
+
+> Kassir bu ro'yxatda yo'q — u davomati yuritiladigan zal xodimi emas,
+> panelning alohida roli.
 
 ---
 
@@ -149,6 +173,7 @@ app/
    ├─ davomat/
    ├─ ishchilar/
    ├─ shikoyatlar/
+   ├─ kassa/
    ├─ hisobot/
    └─ sozlamalar/
 
