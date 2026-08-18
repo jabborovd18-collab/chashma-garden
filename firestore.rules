@@ -1,0 +1,244 @@
+rules_version = '2';
+
+// ════════════════════════════════════════════════════════════════
+// CHASHMA GARDEN - DAVOMAT VA OYLIK NAZORAT TIZIMI
+// ════════════════════════════════════════════════════════════════
+// Bu yerda 70 ta xodimning maoshi va shaxsiy ma'lumoti saqlanadi.
+// Hech qanday ma'lumot autentifikatsiyasiz ochilmaydi.
+//
+// Rollar:
+//   director — hamma narsa. Faqat unda: sozlamalar, jarima qoidalari,
+//              panel foydalanuvchilari va yozuvlarni O'CHIRISH
+//   admin    — kundalik boshqaruv: xodim qo'shish/tahrirlash, stavka,
+//              lavozimlar, davomat, avans, eslatma, oylik hisobot
+//   hostes   — faqat davomat belgilash va shikoyat kiritish
+//   worker   — shaxsiy kabinet: FAQAT o'z yozuvlarini o'qiydi
+//
+// Eng muhim ikki qoida:
+//   1. `worker` boshqa xodimning maoshini hech qanday yo'l bilan
+//      o'qiy olmaydi
+//   2. `admin` o'ziga yoki boshqaga direktor roli bera olmaydi —
+//      u faqat `worker` rolidagi hisob yarata oladi
+// ════════════════════════════════════════════════════════════════
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Yordamchi funksiyalar ───────────────────────────────
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function profile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function hasProfile() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function role() {
+      return hasProfile() ? profile().role : 'none';
+    }
+
+    function isActive() {
+      return hasProfile() && profile().active == true;
+    }
+
+    function isDirector() {
+      return isActive() && role() == 'director';
+    }
+
+    function isAdmin() {
+      return isActive() && role() == 'admin';
+    }
+
+    // Kadrlarni boshqaradiganlar: xodim qo'shish, stavka, lavozim
+    function canManageStaff() {
+      return isDirector() || isAdmin();
+    }
+
+    // Pul bilan ishlaydiganlar: avans, ushlanma, to'lov.
+    // Kassir shu guruhda, lekin kadrlarga tegmaydi.
+    function canHandleMoney() {
+      return isActive() && role() in ['director', 'admin', 'kassir'];
+    }
+
+    // Davomat belgilay oladiganlar
+    function canMarkAttendance() {
+      return isActive() && role() in ['director', 'admin', 'hostes'];
+    }
+
+    // Butun kadrlar ma'lumotini (stavkalar bilan) ko'ra oladiganlar.
+    // Kassir ham shu yerda: kimga qancha berishni bilishi kerak.
+    function canReadStaff() {
+      return isActive() && role() in ['director', 'admin', 'hostes', 'kassir'];
+    }
+
+    // ─── Xodimning shaxsiy kabineti ──────────────────────────
+    // users/{uid} hujjatidagi workerId maydoni xodimni o'z
+    // kartochkasiga bog'laydi. Xodim faqat shu id ga tegishli
+    // yozuvlarni o'qiy oladi.
+
+    function isWorkerRole() {
+      return isActive() && role() == 'worker';
+    }
+
+    function myWorkerId() {
+      return profile().workerId;
+    }
+
+    function isMine(workerId) {
+      return isWorkerRole() && workerId == myWorkerId();
+    }
+
+    // Birinchi ishga tushirish "darvozasi".
+    // settings/app hujjati yaratilgunicha ochiq turadi — shu payt
+    // birinchi direktor o'zini ro'yxatdan o'tkazadi. Hujjat paydo
+    // bo'lgach darvoza butunlay yopiladi va boshqa hech qachon
+    // ochilmaydi.
+    function bootstrapOpen() {
+      return !exists(/databases/$(database)/documents/settings/app);
+    }
+
+    // ─── users: profillar va rollar ──────────────────────────
+    //
+    // Bu kolleksiya — imtiyozlarni oshirish uchun eng xavfli joy.
+    // Shuning uchun administratorga qat'iy cheklov qo'yilgan:
+    // u FAQAT `worker` rolidagi hujjat yarata oladi va mavjud
+    // `worker` hujjatini `worker` bo'lib qolishi shartida
+    // o'zgartira oladi.
+    //
+    // Bo'lmasa administrator yangi Firebase hisobi ochib, unga
+    // director roli berib, o'sha hisob bilan kirib olardi.
+
+    match /users/{uid} {
+      allow read: if signedIn() && (
+           request.auth.uid == uid
+        || isDirector()
+        // Administrator xodimlar ro'yxatidagi login holatini ko'radi.
+        // So'rov where('role','==','worker') bilan cheklangan bo'lishi
+        // kerak, aks holda Firestore butun so'rovni rad etadi.
+        || (isAdmin() && resource.data.role == 'worker')
+      );
+
+      allow create: if isDirector()
+        || (isAdmin()
+            && request.resource.data.role == 'worker'
+            && request.resource.data.workerId is string)
+        || (signedIn()
+            && request.auth.uid == uid
+            && bootstrapOpen()
+            && request.resource.data.role == 'director');
+
+      allow update: if isDirector()
+        || (isAdmin()
+            && resource.data.role == 'worker'
+            && request.resource.data.role == 'worker');
+
+      allow delete: if isDirector();
+    }
+
+    // ─── workers: xodimlar kartotekasi ───────────────────────
+    // Administrator ham qo'shadi, tahrirlaydi va stavkani belgilaydi.
+    // Xodim o'z kartochkasini o'qiy oladi, lekin o'zgartira olmaydi.
+
+    match /workers/{workerId} {
+      allow read: if canReadStaff() || isMine(workerId);
+      allow write: if canManageStaff();
+    }
+
+    // ─── positions: lavozimlar ───────────────────────────────
+    // Xodim ham o'qiy oladi — kabinetda lavozim nomi ko'rinishi uchun.
+
+    match /positions/{positionId} {
+      allow read: if isActive();
+      allow write: if canManageStaff();
+    }
+
+    // ─── attendance: kunlik davomat ──────────────────────────
+    // Belgilash hostesgacha ochiq, o'chirish esa faqat direktorda:
+    // hisobot yaxlitligi buzilmasligi kerak.
+    //
+    // Xodim o'z yozuvlarini o'qiydi. So'rov albatta
+    // where('workerId','==',<o'zi>) bilan cheklangan bo'lishi kerak.
+
+    match /attendance/{docId} {
+      allow read: if canReadStaff() || isMine(resource.data.workerId);
+      allow create, update: if canMarkAttendance();
+      allow delete: if isDirector();
+    }
+
+    // ─── advances: avanslar ──────────────────────────────────
+    // Berish — administratorda, o'chirish — direktorda.
+    // Avansni o'chirish to'lanadigan summani oshiradi, shuning
+    // uchun bu amal direktorda qoladi.
+
+    match /advances/{docId} {
+      allow read: if canReadStaff() || isMine(resource.data.workerId);
+      allow create, update: if canHandleMoney();
+      allow delete: if isDirector();
+    }
+
+    // ─── charges: xodim zimmasiga yozilgan summa ─────────────
+    // Singan idish, yo'qolgan jihoz, kam chiqqan kassa.
+    // Kassir yozadi, xodim o'ziniki ko'radi, o'chirish direktorda —
+    // yozilgan summani xodimning o'zi ham, kassir ham yo'qota olmasin.
+
+    match /charges/{docId} {
+      allow read: if canReadStaff() || isMine(resource.data.workerId);
+      allow create, update: if canHandleMoney();
+      allow delete: if isDirector();
+    }
+
+    // ─── payouts: kassir bergan pul ──────────────────────────
+    // To'lov yozuvi — kimga, qachon, qancha berilgani.
+    // O'chirish direktorda: to'lov yozuvini yo'qotish "bermagan"
+    // ko'rinishini beradi va qayta to'lashga olib kelishi mumkin.
+
+    match /payouts/{docId} {
+      allow read: if canReadStaff() || isMine(resource.data.workerId);
+      allow create, update: if canHandleMoney();
+      allow delete: if isDirector();
+    }
+
+    // ─── notes: xodimga yozilgan eslatmalar ──────────────────
+    // Xodim o'ziga tegishlisini o'qiydi, lekin o'chira olmaydi.
+
+    match /notes/{docId} {
+      allow read: if canReadStaff() || isMine(resource.data.workerId);
+      allow create, update: if canManageStaff();
+      allow delete: if isDirector();
+    }
+
+    // ─── complaints: mijoz shikoyatlari ──────────────────────
+    // Xodim rolida O'QIY OLMAYDI — shikoyatlar boshqaruv uchun,
+    // majlisda muhokama qilinadi.
+
+    match /complaints/{docId} {
+      allow read: if canReadStaff();
+      allow create: if canMarkAttendance();
+      allow update: if canManageStaff();
+      allow delete: if isDirector();
+    }
+
+    // ─── settings: jarima qoidalari, smena vaqti, Telegram ───
+    // Faqat direktor o'zgartiradi. Xodim ham o'qiydi — jarima
+    // qoidasi ochiq bo'lgani ma'qul, shunda "nega ushlab qolindi"
+    // degan savol kamayadi.
+
+    match /settings/{docId} {
+      allow read: if isActive();
+      allow create: if isDirector() || (signedIn() && docId == 'app' && bootstrapOpen());
+      allow update, delete: if isDirector();
+    }
+
+    // ─── Boshqa hamma narsa yopiq ────────────────────────────
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

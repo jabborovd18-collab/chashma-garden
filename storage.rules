@@ -1,0 +1,21 @@
+rules_version = '2';
+
+// ════════════════════════════════════════════════════════════════
+// FIREBASE STORAGE
+// ════════════════════════════════════════════════════════════════
+// Davomat tizimi hozircha fayl saqlamaydi (rasmlar menyu loyihasida
+// kerak edi). Shuning uchun Storage butunlay yopilgan.
+//
+// Kelajakda kerak bo'lsa — masalan shikoyatga rasm biriktirish —
+// shu yerga aniq yo'l va autentifikatsiya sharti bilan ruxsat
+// qo'shiladi. Ochiq qoldirish xavfli: har kim faylni to'ldirib,
+// hisobni oshirib yuborishi mumkin.
+// ════════════════════════════════════════════════════════════════
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
