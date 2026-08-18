@@ -682,6 +682,11 @@ function TelegramSettings({ settings, onSaved, showToast }) {
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
 
+  // Lokal nusxada server o'zgaruvchilari bo'lmasligi mumkin —
+  // xato chiqqanda buni aytib qo'yish kerak
+  const joriyManzil = typeof window === 'undefined' ? '' : window.location.host
+  const lokalmi = /^(localhost|127\.0\.0\.1)/.test(joriyManzil)
+
   /* ─── Holat ──────────────────────────────────────────────────── */
 
   const holatniYukla = useCallback(async () => {
@@ -848,6 +853,52 @@ function TelegramSettings({ settings, onSaved, showToast }) {
           <div style={{ display: 'flex', justifyContent: 'center', padding: 20 }}>
             <Spinner size={20} />
           </div>
+        ) : holat?.xato ? (
+          // So'rovning o'zi o'tmadi. Bu holatda "sozlanmagan" deb
+          // yozish noto'g'ri bo'lardi — haqiqiy sababni ko'rsatamiz.
+          <>
+            <div
+              style={{
+                background: COLORS.dangerSoft,
+                border: `1px solid ${COLORS.danger}26`,
+                color: COLORS.danger,
+                padding: '12px 14px',
+                borderRadius: UI.radius.control,
+                fontSize: 13,
+                lineHeight: 1.6,
+                display: 'flex',
+                gap: 10,
+              }}
+            >
+              <Icon name="alert" size={16} />
+              <div>
+                <strong>Serverdan javob olinmadi</strong>
+                <div style={{ marginTop: 4 }}>{holat.xato}</div>
+              </div>
+            </div>
+
+            <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 12, lineHeight: 1.7 }}>
+              Hozir ochilgan manzil: <code>{joriyManzil}</code>
+              {lokalmi && (
+                <>
+                  <br />
+                  Bu — kompyuteringizdagi nusxa. Server o‘zgaruvchilari Vercel’da
+                  sozlangan bo‘lsa ham bu yerga tushmaydi: ular loyihadagi{' '}
+                  <code>.env.local</code> fayliga ham yozilishi kerak. Botni tekshirish
+                  uchun jonli saytni oching.
+                </>
+              )}
+            </div>
+
+            <button
+              onClick={holatniYukla}
+              className="btn-secondary"
+              style={secondaryButtonStyle({ width: '100%', marginTop: 14 })}
+            >
+              <Icon name="refresh" size={14} />
+              Qayta urinish
+            </button>
+          </>
         ) : (
           <>
             <HolatQator
@@ -971,7 +1022,7 @@ function TelegramSettings({ settings, onSaved, showToast }) {
           )}
         </div>
 
-        {!tayyor && !holatYuklanmoqda && (
+        {!tayyor && !holatYuklanmoqda && !holat?.xato && (
           <div style={{ marginTop: 16 }}>
             <InfoBanner tone="warning">
               Bot ishlashi uchun Vercel’da muhit o‘zgaruvchilari sozlanishi kerak:
