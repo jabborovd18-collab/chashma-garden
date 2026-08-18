@@ -22,6 +22,13 @@ import { dateKey, timeNow } from '@/lib/utils'
 import { STATUS } from '@/lib/constants'
 import { ok, fail, cronAuthorized } from '@/lib/server/api'
 
+// firebase-admin Node muhitini talab qiladi (fayl tizimi, kripto).
+// Buni aniq belgilamasak Next uni boshqa muhitda ishga tushirishga
+// urinishi va modul yuklanishida yiqilishi mumkin — bunday xato
+// handler ichidagi try/catch ga tushmaydi, HTML 500 bo'lib chiqadi.
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
 async function yubor(request) {
   // Cron kalitisiz kelgan bo'lsa — faqat direktor chaqira oladi
   if (!cronAuthorized(request)) {
