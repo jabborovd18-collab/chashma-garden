@@ -287,9 +287,9 @@ export default function ShikoyatlarPage() {
           profile={profile}
           role={role}
           onClose={() => setShowForm(false)}
-          onSaved={async (xabar) => {
+          onSaved={async (xabar, turi) => {
             setShowForm(false)
-            showToast(xabar || 'Shikoyat qayd etildi')
+            showToast(xabar || 'Shikoyat qayd etildi', turi || 'success')
             await refresh()
           }}
         />
@@ -361,7 +361,18 @@ function ComplaintModal({ workers, profile, role, onClose, onSaved }) {
       // bo'ladi, yuborilmasa foydalanuvchi buni bilishi kerak
       const natija = await notifyComplaint(id)
 
-      await onSaved(natija?.yuborildi ? 'Shikoyat qayd etildi va guruhga yuborildi' : null)
+      // Yuborilmasa sababini aytamiz. Jim qolish eng yomoni:
+      // foydalanuvchi guruhga qarab turadi, xabar esa kelmaydi va
+      // nima uchunligi ma'lum bo'lmaydi.
+      if (natija?.yuborildi) {
+        await onSaved('Shikoyat qayd etildi va guruhga yuborildi', 'success')
+      } else {
+        const sabab = natija?.sabab || natija?.error
+        await onSaved(
+          sabab ? `Shikoyat saqlandi, lekin guruhga yuborilmadi: ${sabab}` : null,
+          sabab ? 'info' : 'success'
+        )
+      }
     } catch (err) {
       setError(errorMessage(err, 'Saqlab bo‘lmadi'))
       setBusy(false)

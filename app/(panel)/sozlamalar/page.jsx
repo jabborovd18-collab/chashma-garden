@@ -687,6 +687,9 @@ function TelegramSettings({ settings, onSaved, showToast }) {
   const joriyManzil = typeof window === 'undefined' ? '' : window.location.host
   const lokalmi = /^(localhost|127\.0\.0\.1)/.test(joriyManzil)
 
+  const guruhBor = !!(form.complaintsChatId || form.attendanceChatId || form.adminChatId)
+  const saqlanmagan = JSON.stringify(form) !== JSON.stringify(settings.telegram)
+
   /* ─── Holat ──────────────────────────────────────────────────── */
 
   const holatniYukla = useCallback(async () => {
@@ -835,13 +838,30 @@ function TelegramSettings({ settings, onSaved, showToast }) {
           onChange={(v) => set('enabled', v)}
         />
 
+        {/* Eng ko'p uchraydigan ikki xato: botni yoqishni unutish va
+            o'zgarishni saqlamaslik. Ikkalasida ham xabar jim ketmaydi —
+            shuning uchun aniq aytib turamiz. */}
+        {guruhBor && !form.enabled && (
+          <InfoBanner tone="warning">
+            Guruhlar kiritilgan, lekin <strong>bot o‘chirilgan</strong> — hech qanday xabar
+            yuborilmaydi. Yuqoridagi «Botni yoqish» ni yoqing va saqlang.
+          </InfoBanner>
+        )}
+
+        {saqlanmagan && (
+          <InfoBanner tone="warning" icon="alert">
+            O‘zgarishlar hali <strong>saqlanmagan</strong>. Saqlanmaguncha bot eski
+            sozlama bilan ishlaydi.
+          </InfoBanner>
+        )}
+
         <button
           onClick={save}
           disabled={busy}
           className="btn-primary"
           style={primaryButtonStyle({ width: '100%' })}
         >
-          {busy ? <Spinner size={15} color="#fff" /> : 'Saqlash'}
+          {busy ? <Spinner size={15} color="#fff" /> : saqlanmagan ? 'Saqlash •' : 'Saqlash'}
         </button>
       </div>
 
