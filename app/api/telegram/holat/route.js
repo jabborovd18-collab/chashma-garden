@@ -33,7 +33,7 @@ export async function GET(request) {
     serverSozlangan: serverSozlanmagan.length === 0,
     yetishmaydi: serverSozlanmagan,
     tokenBor: !tokenYoq,
-    cronSozlangan: !!process.env.CRON_SECRET,
+    cronSozlangan: !!(process.env.CRON_SECRET || '').trim(),
     bot,
     botXatosi,
   })
