@@ -221,14 +221,87 @@ firestore.rules           ⭐ Xavfsizlik qoidalari
 
 ---
 
-## Keyingi bosqich — Telegram bot
+## Telegram bot
 
-Hozircha panel to'liq ishlaydi, bot integratsiyasi qo'shilmagan. Rejalashtirilgan:
+Uchta guruhga avtomatik xabar yuboradi:
 
-1. **Shikoyatlar guruhi** — saytga kiritilgan shikoyat darhol guruhga yuboriladi
-2. **Davomat guruhi** — xodim kelganda real vaqtda xabar
-3. **Adminlar guruhi** — kuniga 2 marta yig'ma hisobot
-   (`13:00 holatiga: afitsant 28/32, oshpaz 7/8, salatchi 4/5`)
+| Guruh | Qachon | Nima |
+|---|---|---|
+| **Shikoyatlar** | Shikoyat kiritilganda | Matn, kim qabul qilgani, stol, tegishli xodim |
+| **Davomat** | Xodim kelganda | Ism, lavozim, vaqt, kechikkan bo'lsa jarima |
+| **Adminlar** | Kuniga 2 marta | Lavozimlar kesimida yig'ma holat |
+
+Hisobot shunday ko'rinadi:
+
+```
+DAVOMAT HISOBOTI
+19 Avgust 2026, soat 13:00 holatiga
+
+Afitsant      28/32  4 kech
+Raner           6/8  1 kech
+Salatchi        4/5
+Oshpaz          7/8  2 kech
+Zakadovkachi    2/2
+
+Jami keldi: 47 / 55
+Kechikkan: 7
+Kelmagan: 3
+```
+
+### Botni sozlash
+
+**1. Bot yarating.** Telegram'da [@BotFather](https://t.me/BotFather) ga `/newbot`
+yozing. Berilgan tokenni saqlang.
+
+**2. Firebase xizmat kalitini oling.** Firebase Console → **Project Settings →
+Service accounts → Generate new private key**. JSON fayl yuklanadi.
+
+**3. Vercel'ga o'zgaruvchilarni kiriting** (Settings → Environment Variables):
+
+```
+TELEGRAM_BOT_TOKEN=8123456789:AAF...
+FIREBASE_PROJECT_ID=chashma-garden
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-...@chashma-garden.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KEY-----\n"
+CRON_SECRET=<uzun tasodifiy matn>
+```
+
+`FIREBASE_PRIVATE_KEY` ni JSON fayldan **tirnoq bilan birga**, `\n` belgilarini
+o'zgartirmasdan ko'chiring.
+
+`CRON_SECRET` uchun kalit yasash:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+**4. Guruhlarni ulang.** Uchta guruh oching, har biriga botni qo'shing va
+**administrator** qiling. Keyin har bir guruhga bitta xabar yozing.
+
+Panelda **Sozlamalar → Telegram → «Guruhlarni topish»** bosing — bot ko'rgan
+guruhlar ro'yxati chiqadi, har birini kerakli maydonga biriktirasiz. Chat ID ni
+qo'lda qidirish shart emas.
+
+**5. Tekshiring.** Har bir guruh yonidagi tugma sinov xabari yuboradi.
+Hammasi ishlagach **«Botni yoqish»** ni yoqib, saqlang.
+
+> **Kuniga ikki marta hisobot.** `vercel.json` da ikkita cron yozilgan
+> (08:00 va 14:00 UTC = 13:00 va 19:00 Toshkent). Vercel bepul tarifida
+> cron kuniga bir marta ishlashi mumkin — ikkinchisi ishlamasa, bepul
+> tashqi xizmatdan (masalan `cron-job.org`) shu manzilga so'rov yuboring:
+>
+> ```
+> https://chashma-garden.vercel.app/api/telegram/hisobot?secret=<CRON_SECRET>
+> ```
+
+> **Davomat guruhi shovqin bo'lsa.** 70 ta xodim uchun kuniga 70 ta xabar
+> ko'p. Sozlamalarda **«Faqat kechikkanlar»** ni yoqsangiz, guruhga faqat
+> kechikkanlar haqida yoziladi.
+
+### Keyingi imkoniyat
+
+Admin SDK ulangani uchun endi **xodimning parolini tiklash** ham
+qilinishi mumkin — avval buning iloji yo'q edi. Hali qo'shilmagan.
 
 Guruh chat ID larini hozirdan **Sozlamalar → Telegram** bo'limiga
 kiritib qo'yish mumkin.

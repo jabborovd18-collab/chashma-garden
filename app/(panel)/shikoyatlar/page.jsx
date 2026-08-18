@@ -26,6 +26,7 @@ import {
   loadWorkers,
 } from '@/lib/db'
 import { Icon } from '@/components/icons'
+import { notifyComplaint } from '@/lib/telegram-client'
 import {
   SectionHeader,
   SectionLoading,
@@ -286,9 +287,9 @@ export default function ShikoyatlarPage() {
           profile={profile}
           role={role}
           onClose={() => setShowForm(false)}
-          onSaved={async () => {
+          onSaved={async (xabar) => {
             setShowForm(false)
-            showToast('Shikoyat qayd etildi')
+            showToast(xabar || 'Shikoyat qayd etildi')
             await refresh()
           }}
         />
@@ -340,7 +341,7 @@ function ComplaintModal({ workers, profile, role, onClose, onSaved }) {
     setBusy(true)
     try {
       const worker = workers.find((w) => w.id === form.aboutWorkerId)
-      await createComplaint({
+      const id = await createComplaint({
         text: form.text.trim(),
         source: form.source,
         customer: form.customer.trim() || null,
@@ -355,7 +356,12 @@ function ComplaintModal({ workers, profile, role, onClose, onSaved }) {
         // Bot shu bayroqqa qarab yuborilmaganlarini topadi
         sentToTelegram: false,
       })
-      await onSaved()
+
+      // Guruhga yuborishni kutamiz — shikoyat kuniga bir-ikkita
+      // bo'ladi, yuborilmasa foydalanuvchi buni bilishi kerak
+      const natija = await notifyComplaint(id)
+
+      await onSaved(natija?.yuborildi ? 'Shikoyat qayd etildi va guruhga yuborildi' : null)
     } catch (err) {
       setError(errorMessage(err, 'Saqlab bo‘lmadi'))
       setBusy(false)

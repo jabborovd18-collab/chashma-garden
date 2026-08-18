@@ -238,7 +238,38 @@ Boshqa foydalanuvchining parolini brauzerdan o'zgartirib bo'lmaydi —
 buning uchun server tomonida Admin SDK kerak (Telegram bosqichida
 qo'shiladi). Xodim o'z parolini kabinetdan o'zgartira oladi.
 
-### 2.7 Xavfsizlik
+### 2.7 Server tomoni va Telegram bot
+
+`lib/server/` ichidagi hamma narsa **faqat serverda** ishlaydi va har
+bir fayl `import 'server-only'` bilan boshlanadi. Bu shunchaki eslatma
+emas: bunday fayl mijoz komponentidan import qilinsa loyiha yig'ilmaydi.
+
+Sabab: Admin SDK xavfsizlik qoidalarini butunlay chetlab o'tadi va
+bot tokeni bilan har kim bot nomidan yozishi mumkin. Shuning uchun
+bu qiymatlarda **`NEXT_PUBLIC_` prefiksi yo'q**.
+
+| O'zgaruvchi | Nima |
+|---|---|
+| `FIREBASE_PROJECT_ID` / `_CLIENT_EMAIL` / `_PRIVATE_KEY` | Admin SDK xizmat kaliti |
+| `TELEGRAM_BOT_TOKEN` | Bot tokeni |
+| `CRON_SECRET` | Avtomatik hisobotni himoyalaydi |
+
+**Xabar matni har doim serverda tuziladi.** Mijoz faqat hujjat id sini
+yuboradi (`{complaintId}`), server esa uni bazadan o'qib matn yasaydi —
+shunda brauzerdan guruhga xohlagan matnni yubortirib bo'lmaydi.
+
+Har bir marshrut `requireUser(request, [rollar])` bilan boshlanadi:
+u Firebase ID tokenini tekshiradi va rolni `users/{uid}` dan oladi,
+mijoz aytganidan emas.
+
+**Bot ishlamay qolsa asosiy ish to'xtamasligi kerak.** `lib/telegram-client.js`
+dagi funksiyalar hech qachon xato tashlamaydi, davomat belgilash esa
+ularning javobini kutmaydi.
+
+Takroriy xabarning oldi `sentToTelegram` bayrog'i bilan olinadi —
+davomat vaqti tahrirlansa xabar ikkinchi marta ketmaydi.
+
+### 2.8 Xavfsizlik
 
 Besh rol, `users/{uid}` hujjatida:
 

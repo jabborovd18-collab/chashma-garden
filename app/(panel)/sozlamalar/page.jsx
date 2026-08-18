@@ -29,6 +29,7 @@ import {
   deleteUserProfile,
 } from '@/lib/db'
 import { Icon } from '@/components/icons'
+import { botStatus, botGroups, botTest, sendReportNow } from '@/lib/telegram-client'
 import {
   SectionHeader,
   SectionLoading,
@@ -665,14 +666,74 @@ function NewUserModal({ onClose, onSaved }) {
 }
 
 /* ════════════════════════════════════════════════════════════════
-   3. TELEGRAM (2-BOSQICH)
+   3. TELEGRAM BOT
    ════════════════════════════════════════════════════════════════ */
 
 function TelegramSettings({ settings, onSaved, showToast }) {
   const [form, setForm] = useState(settings.telegram)
   const [busy, setBusy] = useState(false)
 
+  const [holat, setHolat] = useState(null)
+  const [holatYuklanmoqda, setHolatYuklanmoqda] = useState(true)
+
+  const [guruhlar, setGuruhlar] = useState(null)
+  const [qidirilmoqda, setQidirilmoqda] = useState(false)
+  const [sinovId, setSinovId] = useState(null)
+
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
+
+  /* ─── Holat ──────────────────────────────────────────────────── */
+
+  const holatniYukla = useCallback(async () => {
+    setHolatYuklanmoqda(true)
+    const res = await botStatus()
+    setHolat(res.ok ? res : { xato: res.error })
+    setHolatYuklanmoqda(false)
+  }, [])
+
+  useEffect(() => {
+    holatniYukla()
+  }, [holatniYukla])
+
+  /* ─── Amallar ────────────────────────────────────────────────── */
+
+  async function guruhlarniTop() {
+    setQidirilmoqda(true)
+    const res = await botGroups()
+    setQidirilmoqda(false)
+
+    if (!res.ok) {
+      showToast(res.error || 'Guruhlarni topib bo‘lmadi', 'error')
+      return
+    }
+
+    setGuruhlar(res.chats)
+    if (res.chats.length === 0) {
+      showToast('Guruh topilmadi — botni guruhga qo‘shib, xabar yozing', 'info')
+    }
+  }
+
+  async function sinovYubor(maydon, chatId, nom) {
+    if (!chatId) return showToast('Avval guruh ID sini kiriting', 'error')
+
+    setSinovId(maydon)
+    const res = await botTest(chatId, nom)
+    setSinovId(null)
+
+    showToast(res.ok ? `«${nom}» guruhiga xabar yuborildi` : res.error, res.ok ? 'success' : 'error')
+  }
+
+  async function hisobotYubor() {
+    setBusy(true)
+    const res = await sendReportNow()
+    setBusy(false)
+
+    if (!res.ok) return showToast(res.error, 'error')
+    showToast(
+      res.yuborildi ? `Hisobot yuborildi: ${res.kelgan}/${res.jami}` : res.sabab,
+      res.yuborildi ? 'success' : 'info'
+    )
+  }
 
   async function save() {
     setBusy(true)
@@ -687,111 +748,283 @@ function TelegramSettings({ settings, onSaved, showToast }) {
     }
   }
 
+  /* ─── Ko'rinish ──────────────────────────────────────────────── */
+
+  const tayyor = holat?.ok && holat.serverSozlangan && holat.tokenBor && holat.bot
+
+  const MAYDONLAR = [
+    {
+      kalit: 'complaintsChatId',
+      nom: 'Shikoyatlar guruhi',
+      izoh: 'Yangi shikoyat kiritilganda darhol yuboriladi',
+    },
+    {
+      kalit: 'attendanceChatId',
+      nom: 'Davomat guruhi',
+      izoh: 'Xodim kelganda xabar tushadi',
+    },
+    {
+      kalit: 'adminChatId',
+      nom: 'Adminlar guruhi',
+      izoh: 'Kuniga ikki marta yig‘ma hisobot',
+    },
+  ]
+
   return (
-    <div style={cardStyle({ padding: 18, maxWidth: 600 })}>
-      <InfoBanner tone="warning">
-        Bot integratsiyasi <strong>2-bosqichda</strong> ishga tushadi. Guruh ID larini hozirdan
-        kiritib qo‘yishingiz mumkin — bot ulanganda darhol ishlay boshlaydi.
-      </InfoBanner>
+    <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', alignItems: 'start' }}>
+      {/* ─── Sozlamalar ─── */}
+      <div style={cardStyle({ padding: 18 })}>
+        <h3 style={{ fontSize: 14.5, marginBottom: 14 }}>Guruhlar</h3>
 
-      <FormField
-        label="Shikoyatlar guruhi (chat ID)"
-        hint="Yangi shikoyat kiritilganda shu guruhga yuboriladi"
-      >
-        <input
-          value={form.complaintsChatId}
-          onChange={(e) => set('complaintsChatId', e.target.value)}
-          placeholder="-1001234567890"
-          style={inputStyle()}
-        />
-      </FormField>
+        {MAYDONLAR.map((m) => (
+          <FormField key={m.kalit} label={m.nom} hint={m.izoh}>
+            <div style={{ display: 'flex', gap: 7 }}>
+              <input
+                value={form[m.kalit] || ''}
+                onChange={(e) => set(m.kalit, e.target.value.trim())}
+                placeholder="-1001234567890"
+                style={inputStyle({ flex: 1 })}
+              />
+              <button
+                onClick={() => sinovYubor(m.kalit, form[m.kalit], m.nom)}
+                disabled={!tayyor || sinovId === m.kalit}
+                title="Sinov xabari yuborish"
+                className="btn-secondary"
+                style={secondaryButtonStyle({ padding: '0 11px' })}
+              >
+                {sinovId === m.kalit ? <Spinner size={14} /> : <Icon name="arrowRight" size={15} />}
+              </button>
+            </div>
+          </FormField>
+        ))}
 
-      <FormField label="Davomat guruhi (chat ID)" hint="Xodim kelganda real vaqtda xabar tushadi">
-        <input
-          value={form.attendanceChatId}
-          onChange={(e) => set('attendanceChatId', e.target.value)}
-          placeholder="-1001234567890"
-          style={inputStyle()}
-        />
-      </FormField>
-
-      <FormField
-        label="Adminlar guruhi (chat ID)"
-        hint="Kuniga ikki marta yig‘ma hisobot shu guruhga tushadi"
-      >
-        <input
-          value={form.adminChatId}
-          onChange={(e) => set('adminChatId', e.target.value)}
-          placeholder="-1001234567890"
-          style={inputStyle()}
-        />
-      </FormField>
-
-      <FormField label="Hisobot vaqtlari" hint="Toshkent vaqti bo‘yicha, kuniga 2 marta">
-        <div style={{ display: 'flex', gap: 8 }}>
-          {[0, 1].map((i) => (
-            <input
-              key={i}
-              type="time"
-              value={form.reportTimes?.[i] || ''}
-              onChange={(e) => {
-                const times = [...(form.reportTimes || ['', ''])]
-                times[i] = e.target.value
-                set('reportTimes', times)
-              }}
-              style={inputStyle({ flex: 1 })}
-            />
-          ))}
-        </div>
-      </FormField>
-
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          border: `1px solid ${COLORS.border}`,
-          padding: 13,
-          borderRadius: UI.radius.control,
-          marginBottom: 16,
-        }}
-      >
-        <div>
-          <div style={{ fontSize: 13, fontWeight: 600 }}>Botni yoqish</div>
-          <div style={{ fontSize: 11.5, color: COLORS.textMuted, marginTop: 2 }}>
-            Bot kodi qo‘shilgandan keyin faollashtiring
+        <FormField label="Hisobot vaqtlari" hint="Toshkent soati bo‘yicha, kuniga 2 marta">
+          <div style={{ display: 'flex', gap: 8 }}>
+            {[0, 1].map((i) => (
+              <input
+                key={i}
+                type="time"
+                value={form.reportTimes?.[i] || ''}
+                onChange={(e) => {
+                  const t = [...(form.reportTimes || ['', ''])]
+                  t[i] = e.target.value
+                  set('reportTimes', t)
+                }}
+                style={inputStyle({ flex: 1 })}
+              />
+            ))}
           </div>
-        </div>
-        <Toggle value={!!form.enabled} onChange={(v) => set('enabled', v)} />
+        </FormField>
+
+        <ToggleRow
+          nom="Faqat kechikkanlar"
+          izoh="70 ta xodim bo‘lsa har kelgan uchun xabar ko‘p bo‘ladi"
+          value={!!form.onlyLate}
+          onChange={(v) => set('onlyLate', v)}
+        />
+
+        <ToggleRow
+          nom="Botni yoqish"
+          izoh="O‘chirilgan bo‘lsa hech qanday xabar yuborilmaydi"
+          value={!!form.enabled}
+          onChange={(v) => set('enabled', v)}
+        />
+
+        <button
+          onClick={save}
+          disabled={busy}
+          className="btn-primary"
+          style={primaryButtonStyle({ width: '100%' })}
+        >
+          {busy ? <Spinner size={15} color="#fff" /> : 'Saqlash'}
+        </button>
       </div>
 
-      <button
-        onClick={save}
-        disabled={busy}
-        className="btn-primary"
-        style={primaryButtonStyle({ width: '100%' })}
-      >
-        {busy ? <Spinner size={15} color="#fff" /> : 'Saqlash'}
-      </button>
+      {/* ─── Holat va yordam ─── */}
+      <div style={cardStyle({ padding: 18 })}>
+        <h3 style={{ fontSize: 14.5, marginBottom: 14 }}>Holat</h3>
 
-      <div
-        style={{
-          marginTop: 20,
-          paddingTop: 16,
-          borderTop: `1px solid ${COLORS.border}`,
-          fontSize: 12,
-          color: COLORS.textMuted,
-          lineHeight: 1.7,
-        }}
-      >
-        <strong style={{ color: COLORS.text }}>Chat ID ni qanday bilish mumkin?</strong>
-        <br />
-        1. Botni guruhga qo‘shing va administrator qiling
-        <br />
-        2. Guruhga istalgan xabar yozing
-        <br />
-        3. Bot tokeni bilan <code>getUpdates</code> so‘rovini yuboring — javobda{' '}
-        <code>chat.id</code> ko‘rinadi (guruhlar uchun manfiy son)
+        {holatYuklanmoqda ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: 20 }}>
+            <Spinner size={20} />
+          </div>
+        ) : (
+          <>
+            <HolatQator
+              nom="Server kaliti"
+              yaxshi={holat?.serverSozlangan}
+              izoh={
+                holat?.serverSozlangan
+                  ? 'Firebase Admin SDK ulangan'
+                  : `Yetishmaydi: ${(holat?.yetishmaydi || []).join(', ')}`
+              }
+            />
+            <HolatQator
+              nom="Bot tokeni"
+              yaxshi={holat?.tokenBor && !!holat?.bot}
+              izoh={
+                holat?.bot
+                  ? `@${holat.bot.username}`
+                  : holat?.botXatosi || 'TELEGRAM_BOT_TOKEN sozlanmagan'
+              }
+            />
+            <HolatQator
+              nom="Cron kaliti"
+              yaxshi={holat?.cronSozlangan}
+              izoh={
+                holat?.cronSozlangan
+                  ? 'Avtomatik hisobot uchun tayyor'
+                  : 'CRON_SECRET sozlanmagan — hisobot faqat qo‘lda yuboriladi'
+              }
+            />
+
+            <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+              <button
+                onClick={holatniYukla}
+                className="btn-secondary"
+                style={secondaryButtonStyle({ flex: 1 })}
+              >
+                <Icon name="refresh" size={14} />
+                Yangilash
+              </button>
+              <button
+                onClick={hisobotYubor}
+                disabled={!tayyor || busy}
+                className="btn-secondary"
+                style={secondaryButtonStyle({ flex: 1 })}
+              >
+                <Icon name="chart" size={14} />
+                Hisobot yuborish
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* ─── Guruh ID topish ─── */}
+        <div style={{ marginTop: 20, paddingTop: 16, borderTop: `1px solid ${COLORS.border}` }}>
+          <h3 style={{ fontSize: 14.5, marginBottom: 6 }}>Guruh ID sini topish</h3>
+          <ol
+            style={{
+              fontSize: 12.5,
+              color: COLORS.textMuted,
+              lineHeight: 1.75,
+              paddingLeft: 18,
+              marginBottom: 12,
+            }}
+          >
+            <li>Botni guruhga qo‘shing va administrator qiling</li>
+            <li>Guruhga istalgan xabar yozing</li>
+            <li>Quyidagi tugmani bosing</li>
+          </ol>
+
+          <button
+            onClick={guruhlarniTop}
+            disabled={!tayyor || qidirilmoqda}
+            className="btn-secondary"
+            style={secondaryButtonStyle({ width: '100%' })}
+          >
+            {qidirilmoqda ? <Spinner size={14} /> : <Icon name="search" size={14} />}
+            Guruhlarni topish
+          </button>
+
+          {guruhlar && guruhlar.length > 0 && (
+            <div style={{ marginTop: 12 }}>
+              {guruhlar.map((g) => (
+                <div
+                  key={g.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: '9px 0',
+                    borderBottom: `1px solid ${COLORS.border}`,
+                    fontSize: 12.5,
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600 }}>{g.title}</div>
+                    <div style={{ color: COLORS.textFaint, fontFamily: 'monospace', fontSize: 11.5 }}>
+                      {g.id}
+                    </div>
+                  </div>
+                  <select
+                    defaultValue=""
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        set(e.target.value, g.id)
+                        showToast(`«${g.title}» tanlandi`)
+                        e.target.value = ''
+                      }
+                    }}
+                    style={inputStyle({ width: 'auto', minHeight: 30, fontSize: 12 })}
+                  >
+                    <option value="">Qayerga?</option>
+                    {MAYDONLAR.map((m) => (
+                      <option key={m.kalit} value={m.kalit}>
+                        {m.nom}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {!tayyor && !holatYuklanmoqda && (
+          <div style={{ marginTop: 16 }}>
+            <InfoBanner tone="warning">
+              Bot ishlashi uchun Vercel’da muhit o‘zgaruvchilari sozlanishi kerak:
+              <br />
+              <code>TELEGRAM_BOT_TOKEN</code>, <code>FIREBASE_PROJECT_ID</code>,{' '}
+              <code>FIREBASE_CLIENT_EMAIL</code>, <code>FIREBASE_PRIVATE_KEY</code>,{' '}
+              <code>CRON_SECRET</code>
+              <br />
+              Tafsilot README.md da.
+            </InfoBanner>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/* ─── Kichik yordamchilar ────────────────────────────────────── */
+
+function ToggleRow({ nom, izoh, value, onChange }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        border: `1px solid ${COLORS.border}`,
+        padding: 13,
+        borderRadius: UI.radius.control,
+        marginBottom: 12,
+        gap: 12,
+      }}
+    >
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 600 }}>{nom}</div>
+        <div style={{ fontSize: 11.5, color: COLORS.textMuted, marginTop: 2 }}>{izoh}</div>
+      </div>
+      <Toggle value={value} onChange={onChange} />
+    </div>
+  )
+}
+
+function HolatQator({ nom, yaxshi, izoh }) {
+  return (
+    <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '7px 0' }}>
+      <span style={{ color: yaxshi ? COLORS.success : COLORS.danger, marginTop: 1 }}>
+        <Icon name={yaxshi ? 'checkCircle' : 'xCircle'} size={16} />
+      </span>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 600 }}>{nom}</div>
+        <div style={{ fontSize: 11.5, color: COLORS.textMuted, marginTop: 1, wordBreak: 'break-word' }}>
+          {izoh}
+        </div>
       </div>
     </div>
   )

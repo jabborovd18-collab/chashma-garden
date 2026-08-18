@@ -34,10 +34,12 @@ import {
   loadAttendanceByDate,
   saveAttendance,
   removeAttendance,
+  attendanceId,
 } from '@/lib/db'
 import { Icon, resolveIconName } from '@/components/icons'
 import { QrScanner } from '@/components/qr-scanner'
 import { parseQrValue } from '@/lib/qr'
+import { notifyArrival } from '@/lib/telegram-client'
 import {
   SectionHeader,
   SectionLoading,
@@ -169,6 +171,10 @@ export default function DavomatPage() {
 
       await saveAttendance(selectedDate, worker.id, payload)
       setRecords((prev) => ({ ...prev, [worker.id]: payload }))
+
+      // Telegram guruhiga xabar — javobini kutmaymiz. Bot ishlamay
+      // qolsa ham davomat belgilash to'xtab qolmasligi kerak.
+      notifyArrival(attendanceId(selectedDate, worker.id))
 
       const label = STATUS[calc.status]?.label || calc.status
       showToast(
