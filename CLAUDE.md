@@ -74,12 +74,36 @@ boxShadow: '0 4px 24px rgba(0,0,0,.12)' // ❌ oddiy kartochkada
 
 Soya faqat **suzuvchi** elementlarda: modal oyna, toast, ochiladigan ro'yxat.
 
-### 1.5 Gradient ishlatilmaydi
+### 1.5 Suzuvchi element portal orqali chiqariladi
+
+`position: fixed` ekranga nisbatan joylashadi — lekin faqat ota-
+elementlarida `transform`, `filter` yoki `perspective` bo'lmasa.
+Bunday xossa yangi mos yozuvlar nuqtasi yaratadi va fixed element
+ekranga emas, o'sha blokka nisbatan joylashib qoladi.
+
+Shuning uchun `Modal` va `Toast` `createPortal` bilan `<body>` ga
+chiqariladi. Yangi suzuvchi komponent yozsangiz — xuddi shunday qiling:
+
+```jsx
+const target = usePortal()
+if (!target) return null
+return createPortal(<div style={{ position: 'fixed' }}>…</div>, target)
+```
+
+Shu sababli `@keyframes fadeIn` da transform ishlatilmaydi — faqat
+`opacity`. Sahifa o'ramiga transform qo'shsangiz, ichidagi barcha
+fixed elementlar buziladi.
+
+**Tekshirish:** komponentni yakka holda emas, haqiqiy sahifa muhitida
+sinang — yopishqoq sarlavha va `.animate-fadeIn` o'rami bilan birga.
+Yakka sinovda bu xato ko'rinmaydi.
+
+### 1.6 Gradient ishlatilmaydi
 
 Fon bir tekis rang bo'ladi. `linear-gradient` faqat brend sarlavhasida
 ruxsat etilgan emas — u ham olib tashlangan.
 
-### 1.6 Rangdan tejamkor foydalaning
+### 1.7 Rangdan tejamkor foydalaning
 
 - Yashil (`COLORS.primary`) — **faqat** asosiy amal tugmasi va ijobiy holat
 - Qizil — xato, jarima, o'chirish

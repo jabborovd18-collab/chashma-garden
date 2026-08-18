@@ -13,9 +13,30 @@
  */
 
 import { useEffect, useState, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { COLORS, UI } from '@/lib/constants'
 import { initials } from '@/lib/utils'
 import { Icon } from './icons'
+
+/**
+ * `position: fixed` element ekranga nisbatan joylashishi uchun uni
+ * <body> ga ko'chiramiz.
+ *
+ * Sababi: `transform`, `filter` yoki `perspective` xossasi bor
+ * har qanday ota-element o'z ichidagi fixed elementlar uchun yangi
+ * mos yozuvlar nuqtasi yaratadi. Bizda sahifalar `.animate-fadeIn`
+ * bilan o'ralgan, unda esa transform bor — natijada modal ekranga
+ * emas, o'sha blokka nisbatan joylashib, tepasi kesilib qolgan edi.
+ *
+ * Portal bu bog'liqlikni butunlay uzadi: kelajakda qanday o'ram
+ * qo'shilsa ham modal to'g'ri joylashadi.
+ */
+function usePortal() {
+  const [target, setTarget] = useState(null)
+  // Server tomonda document yo'q — brauzerga ulangandan keyin o'rnatamiz
+  useEffect(() => setTarget(document.body), [])
+  return target
+}
 
 /* ════════════════════════════════════════════════════════════════
    YUKLANISH
@@ -80,8 +101,11 @@ const TOAST_STYLES = {
 
 export function Toast({ message, type = 'success' }) {
   const t = TOAST_STYLES[type] || TOAST_STYLES.success
+  const target = usePortal()
 
-  return (
+  if (!target) return null
+
+  return createPortal(
     <div
       role="status"
       style={{
@@ -108,7 +132,8 @@ export function Toast({ message, type = 'success' }) {
         <Icon name={t.icon} size={17} />
       </span>
       <span>{message}</span>
-    </div>
+    </div>,
+    target
   )
 }
 
@@ -237,6 +262,8 @@ export function EmptyState({ icon = 'circleDashed', title, subtitle, action }) {
    ════════════════════════════════════════════════════════════════ */
 
 export function Modal({ title, children, onClose, width = 560 }) {
+  const target = usePortal()
+
   useEffect(() => {
     const onEsc = (e) => {
       if (e.key === 'Escape') onClose()
@@ -249,7 +276,9 @@ export function Modal({ title, children, onClose, width = 560 }) {
     }
   }, [onClose])
 
-  return (
+  if (!target) return null
+
+  return createPortal(
     <div
       onClick={onClose}
       className="modal-backdrop"
@@ -311,7 +340,8 @@ export function Modal({ title, children, onClose, width = 560 }) {
             uchun sarlavhasi ekran tepasidan chiqib ketadi. */}
         <div style={{ padding: 18, overflowY: 'auto', flex: 1, minHeight: 0 }}>{children}</div>
       </div>
-    </div>
+    </div>,
+    target
   )
 }
 

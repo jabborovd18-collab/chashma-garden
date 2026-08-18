@@ -86,9 +86,14 @@ input:focus, select:focus, textarea:focus {
   to { transform: translate(-50%, 0); opacity: 1; }
 }
 
+/* Diqqat: bu yerda transform ISHLATILMAYDI.
+   `animation-fill-mode: both` bilan transform element ustida qolib
+   ketadi, transformli element esa o'z ichidagi `position: fixed`
+   elementlar uchun yangi mos yozuvlar nuqtasi yaratadi — modal va
+   toast ekranga emas, shu blokka nisbatan joylashib qoladi. */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .animate-fadeIn {
