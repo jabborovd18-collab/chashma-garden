@@ -404,7 +404,10 @@ export function SectionHeader({ icon, title, subtitle, action }) {
           )}
         </div>
       </div>
-      {action}
+      {/* Telefonda boshqaruv tugmalari butun kenglikni egallaydi va
+          o'rami bo'yicha yangi qatorga tushadi — globals.css dagi
+          .header-actions qoidasiga qarang */}
+      {action && <div className="header-actions">{action}</div>}
     </div>
   )
 }

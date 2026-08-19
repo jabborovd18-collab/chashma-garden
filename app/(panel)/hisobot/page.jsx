@@ -222,7 +222,7 @@ export default function HisobotPage() {
       ) : (
         <div style={cardStyle({ overflow: 'hidden' })}>
           <div className="table-wrap">
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <table className="table-cards" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ background: COLORS.zebra, borderBottom: `1px solid ${COLORS.border}` }}>
                   <Th align="left">Xodim</Th>
@@ -265,12 +265,12 @@ export default function HisobotPage() {
                       </div>
                     </Td>
 
-                    <Td>
+                    <Td label="Ishlagan">
                       <strong>{r.totals.ishlagan}</strong>
                       <span style={{ color: COLORS.textMuted }}> kun</span>
                     </Td>
 
-                    <Td>
+                    <Td label="Kechikish">
                       {r.totals.kechikkan > 0 ? (
                         <Badge icon="clock" color={COLORS.warning}>
                           {r.totals.kechikkan}× · {formatDuration(r.totals.kechikishDaq)}
@@ -280,27 +280,27 @@ export default function HisobotPage() {
                       )}
                     </Td>
 
-                    <Td align="right">{formatSom(r.totals.hisoblangan)}</Td>
+                    <Td label="Hisoblangan" align="right">{formatSom(r.totals.hisoblangan)}</Td>
 
-                    <Td align="right">
+                    <Td label="Jarima" align="right">
                       <span style={{ color: r.totals.jarima ? COLORS.danger : COLORS.textFaint }}>
                         {r.totals.jarima ? `−${formatSom(r.totals.jarima)}` : '—'}
                       </span>
                     </Td>
 
-                    <Td align="right">
+                    <Td label="Avans" align="right">
                       <span style={{ color: r.totals.avans ? COLORS.warning : COLORS.textFaint }}>
                         {r.totals.avans ? `−${formatSom(r.totals.avans)}` : '—'}
                       </span>
                     </Td>
 
-                    <Td align="right">
+                    <Td label="Ushlanma" align="right">
                       <span style={{ color: r.totals.ushlanma ? COLORS.danger : COLORS.textFaint }}>
                         {r.totals.ushlanma ? `−${formatSom(r.totals.ushlanma)}` : '—'}
                       </span>
                     </Td>
 
-                    <Td align="right">
+                    <Td label="To‘lanadi" align="right">
                       <strong style={{ fontSize: 13.5 }}>{formatSom(r.totals.yakuniy)}</strong>
                     </Td>
 
@@ -325,19 +325,19 @@ export default function HisobotPage() {
 
                 <tr style={{ background: COLORS.primarySoft, fontWeight: 600 }}>
                   <Td align="left">Jami — {rows.length} xodim</Td>
-                  <Td>{grand.ishlagan}</Td>
-                  <Td>{grand.kechikkan}×</Td>
-                  <Td align="right">{formatSom(grand.hisoblangan)}</Td>
-                  <Td align="right" style={{ color: COLORS.danger }}>
+                  <Td label="Ishlagan">{grand.ishlagan}</Td>
+                  <Td label="Kechikish">{grand.kechikkan}×</Td>
+                  <Td label="Hisoblangan" align="right">{formatSom(grand.hisoblangan)}</Td>
+                  <Td label="Jarima" align="right" style={{ color: COLORS.danger }}>
                     −{formatSom(grand.jarima)}
                   </Td>
-                  <Td align="right" style={{ color: COLORS.warning }}>
+                  <Td label="Avans" align="right" style={{ color: COLORS.warning }}>
                     −{formatSom(grand.avans)}
                   </Td>
-                  <Td align="right" style={{ color: COLORS.danger }}>
+                  <Td label="Ushlanma" align="right" style={{ color: COLORS.danger }}>
                     −{formatSom(grand.ushlanma)}
                   </Td>
-                  <Td align="right" style={{ fontSize: 14 }}>
+                  <Td label="To‘lanadi" align="right" style={{ fontSize: 14 }}>
                     {formatSom(grand.yakuniy)}
                   </Td>
                   <Td />
@@ -397,9 +397,14 @@ function Th({ children, align = 'center' }) {
   )
 }
 
-function Td({ children, align = 'center', style }) {
+function Td({ children, align = 'center', style, label }) {
+  // data-label — telefonda ustun nomi qiymat yonida chiqadi
+  // (globals.css dagi .table-cards qoidalariga qarang)
   return (
-    <td style={{ padding: '9px 12px', textAlign: align, whiteSpace: 'nowrap', ...style }}>
+    <td
+      data-label={label}
+      style={{ padding: '9px 12px', textAlign: align, whiteSpace: 'nowrap', ...style }}
+    >
       {children}
     </td>
   )

@@ -134,6 +134,124 @@ input:focus, select:focus, textarea:focus {
   -webkit-overflow-scrolling: touch;
 }
 
+/* ─── Telefon ──────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  /* iOS input'ga bosilganda shriftni 16px dan kichik deb bilsa,
+     sahifani o'zi kattalashtirib yuboradi va foydalanuvchi qo'lda
+     qaytarishga majbur bo'ladi. 16px buni butunlay to'xtatadi. */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Barmoq uchun 30px kichik. Ichki uslub CSS dan kuchli bo'lgani
+     uchun !important kerak. `.mini` — tartib strelkalari kabi ataylab
+     kichik tugmalar, ular bundan chetda qoladi. */
+  button:not(.mini) {
+    min-height: 38px !important;
+  }
+
+  /* Sahifa chetidagi bo'shliqni qisqartiramiz: 375px da har piksel qimmat */
+  .page-pad {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  /* Sarlavhadagi boshqaruv: masalan Davomatda 5 ta element bor —
+     Skaner, oldingi kun, sana, keyingi kun, Bugun. Ular bir qatorga
+     sig'maydi, shuning uchun butun kenglikni olib o'raladi. */
+  .header-actions {
+    width: 100%;
+  }
+
+  .header-actions > * {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .header-actions input[type='date'],
+  .header-actions input[type='month'] {
+    flex: 1 1 130px;
+    min-width: 0;
+    width: auto !important;
+  }
+}
+
+/* ─── Keng jadval telefonda kartochkaga aylanadi ──────────────
+   Gorizontal siljitish o'rniga har bir qator alohida kartochka
+   bo'ladi, ustun nomi esa qiymat yonida chiqadi. Belgilash
+   `data-label` orqali — ya'ni bir xil HTML ikkala ko'rinishga
+   ham xizmat qiladi, takroriy razmetka yozilmaydi. */
+
+@media (max-width: 760px) {
+  .table-cards thead {
+    display: none;
+  }
+
+  .table-cards,
+  .table-cards tbody,
+  .table-cards tr,
+  .table-cards td {
+    display: block;
+    width: 100%;
+  }
+
+  .table-cards tr {
+    border: 1px solid #E3E6E3 !important;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    padding: 6px 12px;
+    background: #FFFFFF;
+  }
+
+  /* Yakuniy "Jami" qatori ajralib tursin */
+  .table-cards tr:last-child {
+    background: #EDF4EE;
+    border-color: #2F6B3A33 !important;
+  }
+
+  .table-cards td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 7px 0 !important;
+    text-align: right !important;
+    white-space: normal !important;
+    border-bottom: 1px solid #F0F2F0;
+  }
+
+  .table-cards td:last-child,
+  .table-cards td:first-child {
+    border-bottom: none;
+  }
+
+  .table-cards td::before {
+    content: attr(data-label);
+    color: #6B7280;
+    font-weight: 500;
+    font-size: 12px;
+    text-align: left;
+    flex-shrink: 0;
+  }
+
+  /* Birinchi katak — xodim ismi, unga sarlavha kerak emas */
+  .table-cards td:first-child {
+    padding: 8px 0 10px !important;
+  }
+
+  .table-cards td:first-child::before {
+    display: none;
+  }
+
+  /* Bo'sh kataklar joy egallamasin */
+  .table-cards td:empty {
+    display: none;
+  }
+}
+
 .truncate {
   overflow: hidden;
   text-overflow: ellipsis;

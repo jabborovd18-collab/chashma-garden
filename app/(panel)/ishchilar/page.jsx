@@ -1086,6 +1086,7 @@ function PositionsModal({ positions, workers, onClose, onChanged, showToast }) {
                 disabled={busy || i === 0}
                 aria-label="Yuqoriga"
                 title="Yuqoriga"
+                className="mini"
                 style={arrowStyle}
               >
                 <Icon name="chevronRight" size={12} style={{ transform: 'rotate(-90deg)' }} />
@@ -1095,6 +1096,7 @@ function PositionsModal({ positions, workers, onClose, onChanged, showToast }) {
                 disabled={busy || i === positions.length - 1}
                 aria-label="Pastga"
                 title="Pastga"
+                className="mini"
                 style={arrowStyle}
               >
                 <Icon name="chevronRight" size={12} style={{ transform: 'rotate(90deg)' }} />

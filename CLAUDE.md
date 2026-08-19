@@ -108,12 +108,32 @@ fixed elementlar buziladi.
 sinang — yopishqoq sarlavha va `.animate-fadeIn` o'rami bilan birga.
 Yakka sinovda bu xato ko'rinmaydi.
 
-### 1.6 Gradient ishlatilmaydi
+### 1.6 Telefon birinchi o'rinda
+
+Hostes davomatni telefonda belgilaydi, xodim kabinetini telefonda
+ochadi. Shuning uchun har bir sahifa `375px` kenglikda ishlashi shart.
+
+| Qoida | Sabab |
+|---|---|
+| Input shrifti telefonda `16px` | iOS kichik shriftni ko'rsa sahifani o'zi kattalashtiradi |
+| Bosiladigan element `38px` dan past emas | Barmoq uchun kichik. Ataylab kichik tugmaga `.mini` sinfi |
+| Keng jadval `className="table-cards"` | Telefonda qatorlar kartochkaga aylanadi |
+| Sahifada gorizontal siljish bo'lmaydi | `document.scrollWidth > innerWidth` bo'lsa xato |
+
+Jadvalni kartochkaga aylantirish uchun har bir `<Td>` ga `label`
+beriladi — u `data-label` ga aylanadi va telefonda qiymat yonida
+ustun nomi bo'lib chiqadi. Bir xil HTML ikkala ko'rinishga xizmat
+qiladi, takroriy razmetka yozilmaydi.
+
+**Tekshirish:** brauzerni `375px` ga qo'yib, gorizontal siljish
+yo'qligini va eng kichik tugma balandligini o'lchang.
+
+### 1.7 Gradient ishlatilmaydi
 
 Fon bir tekis rang bo'ladi. `linear-gradient` faqat brend sarlavhasida
 ruxsat etilgan emas — u ham olib tashlangan.
 
-### 1.7 Rangdan tejamkor foydalaning
+### 1.8 Rangdan tejamkor foydalaning
 
 - Yashil (`COLORS.primary`) — **faqat** asosiy amal tugmasi va ijobiy holat
 - Qizil — xato, jarima, o'chirish

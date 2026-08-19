@@ -248,7 +248,7 @@ export default function KassaPage() {
       ) : (
         <div style={cardStyle({ overflow: 'hidden' })}>
           <div className="table-wrap">
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <table className="table-cards" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ background: COLORS.zebra, borderBottom: `1px solid ${COLORS.border}` }}>
                   <Th align="left">Xodim</Th>
@@ -289,29 +289,29 @@ export default function KassaPage() {
                       </div>
                     </Td>
 
-                    <Td align="right">
+                    <Td label="Jarima" align="right">
                       <span style={{ color: r.totals.jarima ? COLORS.danger : COLORS.textFaint }}>
                         {r.totals.jarima ? `−${formatSom(r.totals.jarima)}` : '—'}
                       </span>
                     </Td>
 
-                    <Td align="right">
+                    <Td label="Ushlanma" align="right">
                       <span style={{ color: r.totals.ushlanma ? COLORS.danger : COLORS.textFaint }}>
                         {r.totals.ushlanma ? `−${formatSom(r.totals.ushlanma)}` : '—'}
                       </span>
                     </Td>
 
-                    <Td align="right">
+                    <Td label="To‘lanadi" align="right">
                       <strong>{formatSom(r.state.kerak)}</strong>
                     </Td>
 
-                    <Td align="right">
+                    <Td label="Berilgan" align="right">
                       <span style={{ color: r.state.berilgan ? COLORS.success : COLORS.textFaint }}>
                         {r.state.berilgan ? formatSom(r.state.berilgan) : '—'}
                       </span>
                     </Td>
 
-                    <Td align="right">
+                    <Td label="Qoldi" align="right">
                       {r.state.toliq ? (
                         <Badge icon="checkCircle" color={COLORS.success}>
                           to‘landi
@@ -356,17 +356,17 @@ export default function KassaPage() {
 
                 <tr style={{ background: COLORS.primarySoft, fontWeight: 600 }}>
                   <Td align="left">Jami — {filtered.length} xodim</Td>
-                  <Td align="right" style={{ color: COLORS.danger }}>
+                  <Td label="Jarima" align="right" style={{ color: COLORS.danger }}>
                     −{formatSom(grand.jarima)}
                   </Td>
-                  <Td align="right" style={{ color: COLORS.danger }}>
+                  <Td label="Ushlanma" align="right" style={{ color: COLORS.danger }}>
                     −{formatSom(grand.ushlanma)}
                   </Td>
-                  <Td align="right">{formatSom(grand.kerak)}</Td>
-                  <Td align="right" style={{ color: COLORS.success }}>
+                  <Td label="To‘lanadi" align="right">{formatSom(grand.kerak)}</Td>
+                  <Td label="Berilgan" align="right" style={{ color: COLORS.success }}>
                     {formatSom(grand.berilgan)}
                   </Td>
-                  <Td align="right" style={{ color: COLORS.warning }}>
+                  <Td label="Qoldi" align="right" style={{ color: COLORS.warning }}>
                     {formatSom(grand.qoldi)}
                   </Td>
                   <Td />
@@ -440,9 +440,14 @@ function Th({ children, align = 'center' }) {
   )
 }
 
-function Td({ children, align = 'center', style }) {
+function Td({ children, align = 'center', style, label }) {
+  // data-label — telefonda ustun nomi qiymat yonida chiqadi
+  // (globals.css dagi .table-cards qoidalariga qarang)
   return (
-    <td style={{ padding: '9px 12px', textAlign: align, whiteSpace: 'nowrap', ...style }}>
+    <td
+      data-label={label}
+      style={{ padding: '9px 12px', textAlign: align, whiteSpace: 'nowrap', ...style }}
+    >
       {children}
     </td>
   )
