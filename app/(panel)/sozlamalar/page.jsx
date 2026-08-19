@@ -676,6 +676,7 @@ function TelegramSettings({ settings, onSaved, showToast }) {
   const [holat, setHolat] = useState(null)
   const [holatYuklanmoqda, setHolatYuklanmoqda] = useState(true)
 
+  const [hisobotNatija, setHisobotNatija] = useState(null)
   const [guruhlar, setGuruhlar] = useState(null)
   const [qidirilmoqda, setQidirilmoqda] = useState(false)
   const [sinovId, setSinovId] = useState(null)
@@ -731,16 +732,30 @@ function TelegramSettings({ settings, onSaved, showToast }) {
     showToast(res.ok ? `«${nom}» guruhiga xabar yuborildi` : res.error, res.ok ? 'success' : 'error')
   }
 
+  /**
+   * Natija toast'da 3 soniyada yo'qoladi — bu yerda esa u ekranda
+   * qolishi kerak. Hisobot yuborilmasa sabab aynan shu joyda
+   * ko'rinib turadi.
+   */
   async function hisobotYubor() {
     setBusy(true)
+    setHisobotNatija(null)
     const res = await sendReportNow()
     setBusy(false)
 
-    if (!res.ok) return showToast(res.error, 'error')
-    showToast(
-      res.yuborildi ? `Hisobot yuborildi: ${res.kelgan}/${res.jami}` : res.sabab,
-      res.yuborildi ? 'success' : 'info'
-    )
+    if (!res.ok) {
+      setHisobotNatija({ tur: 'xato', matn: res.error })
+      return
+    }
+
+    if (res.yuborildi) {
+      setHisobotNatija({
+        tur: 'yaxshi',
+        matn: `Hisobot adminlar guruhiga yuborildi — ${res.kelgan}/${res.jami} keldi`,
+      })
+    } else {
+      setHisobotNatija({ tur: 'ogoh', matn: `Yuborilmadi: ${res.sabab}` })
+    }
   }
 
   async function save() {
@@ -964,10 +979,60 @@ function TelegramSettings({ settings, onSaved, showToast }) {
                 className="btn-secondary"
                 style={secondaryButtonStyle({ flex: 1 })}
               >
-                <Icon name="chart" size={14} />
+                {busy ? <Spinner size={14} /> : <Icon name="chart" size={14} />}
                 Hisobot yuborish
               </button>
             </div>
+
+            {/* Natija ekranda qoladi — toast tez yo'qolib, sabab
+                ko'rinmay qolgan edi */}
+            {hisobotNatija && (
+              <div
+                style={{
+                  marginTop: 12,
+                  padding: '11px 13px',
+                  borderRadius: UI.radius.control,
+                  fontSize: 12.5,
+                  lineHeight: 1.6,
+                  display: 'flex',
+                  gap: 9,
+                  alignItems: 'flex-start',
+                  ...{
+                    yaxshi: {
+                      background: COLORS.primarySoft,
+                      color: COLORS.primary,
+                      border: `1px solid ${COLORS.primary}26`,
+                    },
+                    ogoh: {
+                      background: COLORS.warningSoft,
+                      color: COLORS.warning,
+                      border: `1px solid ${COLORS.warning}26`,
+                    },
+                    xato: {
+                      background: COLORS.dangerSoft,
+                      color: COLORS.danger,
+                      border: `1px solid ${COLORS.danger}26`,
+                    },
+                  }[hisobotNatija.tur],
+                }}
+              >
+                <Icon
+                  name={hisobotNatija.tur === 'yaxshi' ? 'checkCircle' : 'alert'}
+                  size={15}
+                />
+                <div>
+                  {hisobotNatija.matn}
+                  {hisobotNatija.tur === 'ogoh' && (
+                    <div style={{ marginTop: 6, opacity: 0.85 }}>
+                      Hisobot <strong>bazadagi</strong> sozlamani o‘qiydi. Sinov tugmasi esa
+                      formaga yozganingizni ishlatadi — shuning uchun sinov ishlab, hisobot
+                      ishlamasligi mumkin. <strong>Saqlash</strong> bosganingizni va
+                      <strong> «Botni yoqish»</strong> yoqilganini tekshiring.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </>
         )}
 
